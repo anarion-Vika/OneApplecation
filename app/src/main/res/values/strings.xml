@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">OneApplecation</string>
+    <string name="btn_disconect">Disconnect</string>
 </resources>

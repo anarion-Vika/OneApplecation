@@ -5,9 +5,9 @@ import android.bluetooth.BluetoothGattCharacteristic;
 public class SensorTagData {
 
 
-        public static double extractHachild(BluetoothGattCharacteristic c) {
-            int rawT = shortUnsignedAtOffset(c,2);
-            return rawT;
+        public static byte[] extractHachild(BluetoothGattCharacteristic c) {
+            byte  [] rawR = c.getValue();
+            return rawR;
         }
 
 
