@@ -11,10 +11,10 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.Menu;
@@ -26,21 +26,18 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.sql.Time;
-import java.util.UUID;
+import static com.example.zhien.oneapplecation.BluetoothParametrs.ADD_H_CHARACTER_REQUEST_UUID;
+import static com.example.zhien.oneapplecation.BluetoothParametrs.ADD_H_CHARACTER_RESPONCE_UUID;
+import static com.example.zhien.oneapplecation.BluetoothParametrs.ADD_H_DESCRIPTOR_UUID;
+import static com.example.zhien.oneapplecation.BluetoothParametrs.ADD_H_SERVICE_REQUEST_UUID;
+import static com.example.zhien.oneapplecation.BluetoothParametrs.ADD_H_SERVICE_RESPONSE_UUID;
 
-public class MainActivity extends AppCompatActivity  implements BluetoothAdapter.LeScanCallback, View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements BluetoothAdapter.LeScanCallback, View.OnClickListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private static final String DEVICE_NAME = "ADD@H_Chat";
 
-    private static final UUID ADD_H_SERVICE = UUID.fromString("42821a40-e477-11e2-82d0-0002a5d5c51b");
-    //read
-    private static final  UUID ADD_H_DATA_CHAR  = UUID.fromString("a32e5520-e477-11e2-a9e3-0002a5d5c51b");
-    //write
-    private static final UUID ADD_H_CONFIG_CHAR  = UUID.fromString("340a1b80-cf4b-11e1-ac36-0002a5d5c51b");
-    private static final UUID ADD_H_DESCRIPTOR = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
     private static final int PERMISSION_REQUEST_FINE_LOCATION = 1;
 
@@ -54,7 +51,6 @@ public class MainActivity extends AppCompatActivity  implements BluetoothAdapter
     private Button btnDisconnect;
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,7 +62,7 @@ public class MainActivity extends AppCompatActivity  implements BluetoothAdapter
         mChild = findViewById(R.id.tvChild);
         mProgress = findViewById(R.id.pbChildProgress);
 
-        BluetoothManager manager = (BluetoothManager)  getSystemService(BLUETOOTH_SERVICE);
+        BluetoothManager manager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         mBluetoothAdapter = manager.getAdapter();
 
         mDevice = new SparseArray<BluetoothDevice>();
@@ -77,25 +73,21 @@ public class MainActivity extends AppCompatActivity  implements BluetoothAdapter
 
         btnDisconnect = findViewById(R.id.btnDisconnect);
         btnDisconnect.setOnClickListener(this);
-
+        i=0;
     }
-
-
-
 
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        if ((mBluetoothAdapter == null) || (!mBluetoothAdapter.isEnabled())){
+        if ((mBluetoothAdapter == null) || (!mBluetoothAdapter.isEnabled())) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivity(enableBtIntent);
             finish();
             return;
         }
-
-        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)){
+        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             Toast.makeText(this, "No LE Support", Toast.LENGTH_LONG).show();
             finish();
             return;
@@ -129,10 +121,8 @@ public class MainActivity extends AppCompatActivity  implements BluetoothAdapter
     @Override
     public void onClick(View view) {
         if (mConnectedGatt != null) {
-
             mConnectedGatt.close();
         }
-
     }
 
     @Override
@@ -144,7 +134,7 @@ public class MainActivity extends AppCompatActivity  implements BluetoothAdapter
             BluetoothDevice device = mDevice.valueAt(i);
             menu.add(0, mDevice.keyAt(i), 0, device.getName());
         }
-          return true;
+        return true;
     }
 
     @Override
@@ -157,33 +147,25 @@ public class MainActivity extends AppCompatActivity  implements BluetoothAdapter
             default:
                 //Obtain the discovered device to connect with
                 BluetoothDevice device = mDevice.get(item.getItemId());
-                Log.i(TAG, "connection to "+ device.getName());
+                Log.i(TAG, "connection to " + device.getName());
                 /*
-                * Make a connection with the  device using the special LE  - specific
-                * connectionGatt() method, passing in a callback for GATT events
-                */
+                 * Make a connection with the  device using the special LE  - specific
+                 * connectionGatt() method, passing in a callback for GATT events
+                 */
                 mConnectedGatt = device.connectGatt(this, true, mGattCallBack);
                 //Display progress UI
-                mHandler.sendMessage(Message.obtain(null, MSG_PROGRESS, "Connecting to "+ device.getName() + "...."));
+                mHandler.sendMessage(Message.obtain(null, MSG_PROGRESS, "Connecting to " + device.getName() + "...."));
                 return super.onOptionsItemSelected(item);
         }
     }
 
-    private void clearDisplayValues (){
-    mChild.setText("--");
-        }
+    private void clearDisplayValues() {
+        mChild.setText("--");
+    }
 
     private Runnable mStopRunnable = () -> stopScan();
     private Runnable mStartRunnable = () -> startScan();
 
-
-    //private Runnable mStartRequest = () -> startRequest();
- //  private Runnable mWritecacter = () -> write();
-
-/*
-    private void write(){
-        new BluetoothGattCallback();
-    }*/
 
     private void startScan() {
         mBluetoothAdapter.startLeScan(this);
@@ -201,11 +183,8 @@ public class MainActivity extends AppCompatActivity  implements BluetoothAdapter
 
     @Override
     public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecor) {
-
-        Log.d(TAG, "New LE Device = "+ device.getName()+ " @ "+ rssi);
-
-        if (DEVICE_NAME.equals(device.getName())){
-
+        Log.d(TAG, "New LE Device = " + device.getName() + " @ " + rssi);
+        if (DEVICE_NAME.equals(device.getName())) {
             mDevice.put(device.hashCode(), device);
             //update the overflow menu
             invalidateOptionsMenu();
@@ -213,82 +192,92 @@ public class MainActivity extends AppCompatActivity  implements BluetoothAdapter
     }
 
     /*
-    * in this call back we've created a bit of a state machine to enforce that only
-    * one characteristic be read or written at a time until all of our sensors
-    * are enabled and we are registered to get a notifications
-    */
-    private static final int ENABLE_REQUEST = 0;
-    private static final int ENABLE_RESPONSE = 1;
+     * in this call back we've created a bit of a state machine to enforce that only
+     * one characteristic be read or written at a time until all of our sensors
+     * are enabled and we are registered to get a notifications
+     */
     private BluetoothGattCallback mGattCallBack = new BluetoothGattCallback() {
-        private  int mState = 0 ;
+        private int mState = 0;
 
-        private void reset(){mState=0;}
-        private void advance() {mState++;}
+        private void reset() {
+            mState = 0;
+        }
+
+        private void advance() {
+            mState++;
+        }
+
         /*
-        * Send an enable command to each sensor by writing a configuration
-        * characteristic. This is specific to the SensorTag to keep power
-        * low by disabling sensors you aren't using
-        */
+         * Send an enable command to each sensor by writing a configuration
+         * characteristic. This is specific to the SensorTag to keep power
+         * low by disabling sensors you aren't using
+         */
         private void enableNextSensor(BluetoothGatt gatt) {
             BluetoothGattCharacteristic characteristic = null;
-            switch (mState){
+            switch (mState) {
                 case 0:
                     Log.d(TAG, "Enabling child call ");
 
-                        characteristic = gatt.getService(ADD_H_SERVICE)
-                                .getCharacteristic(ADD_H_CONFIG_CHAR);
-                        characteristic.setValue(new byte[]{0x01, 0x02, 0x01, (byte) 0xFE});
-                    break;
-                case 1:
 
-                        Log.d(TAG, "Enabling child call ");
-                        characteristic = gatt.getService(ADD_H_SERVICE)
-                                .getCharacteristic(ADD_H_DATA_CHAR);
-                        characteristic.setValue(new byte[]{0x01, 0x02, 0x01, (byte) 0xFE});
+                    characteristic = gatt.getService(ADD_H_SERVICE_REQUEST_UUID)
+                            .getCharacteristic(ADD_H_CHARACTER_REQUEST_UUID);
+                    characteristic.setValue(new byte[]{0x01, 0x02, 0x01, (byte) 0xFE});
+                    break;
+
+                case 1:
+                    Log.d(TAG, "Enabling child call ");
+                    characteristic = gatt.getService(ADD_H_SERVICE_RESPONSE_UUID)
+                            .getCharacteristic(ADD_H_CHARACTER_RESPONCE_UUID);
+                    characteristic.setValue(new byte[]{0x01, 0x02, 0x01, (byte) 0xFE});
                     break;
 
                 default:
                     mHandler.sendEmptyMessage(MSG_DISMISS);
                     Log.d(TAG, "All sensor Enable");
             }
-                gatt.writeCharacteristic(characteristic);
+            gatt.writeCharacteristic(characteristic);
         }
 
-        private void readNextSensor(BluetoothGatt gatt){
+        private void readNextSensor(BluetoothGatt gatt) {
             BluetoothGattCharacteristic characteristic;
-            switch (mState){
+            switch (mState) {
                 case 0:
                     Log.d(TAG, "reading HACHILD");
-
-                    characteristic  = gatt.getService(ADD_H_SERVICE)
-                            .getCharacteristic(ADD_H_DATA_CHAR);
+                    characteristic = gatt.getService(ADD_H_SERVICE_RESPONSE_UUID)
+                            .getCharacteristic(ADD_H_CHARACTER_RESPONCE_UUID);
                     break;
                 case 1:
                     Log.d(TAG, "reading HACHILD");
-
-                    characteristic  = gatt.getService(ADD_H_SERVICE)
-                            .getCharacteristic(ADD_H_CONFIG_CHAR);
+                    characteristic = gatt.getService(ADD_H_SERVICE_REQUEST_UUID)
+                            .getCharacteristic(ADD_H_CHARACTER_REQUEST_UUID);
                     break;
                 default:
+                    mHandler.sendEmptyMessage(MSG_DISMISS);
+                    Log.d(TAG, "Sensor Enabled");
                     return;
             }
             gatt.readCharacteristic(characteristic);
         }
 
         /*
-        * Enable notifications of changes on the data characteristic for each sensor
-        * by writing the ENABLE_NOTIFICATION_VALUE flag to that characteristic's
-        * configuration descriptor
-        */
+         * Enable notifications of changes on the data characteristic for each sensor
+         * by writing the ENABLE_NOTIFICATION_VALUE flag to that characteristic's
+         * configuration descriptor
+         */
         private void setNotifyNextSensor(BluetoothGatt gatt) {
             BluetoothGattCharacteristic characteristic;
-            switch (mState){
+            switch (mState) {
                 case 0:
                     Log.d(TAG, "Set notify HAHCILD call");
 
-                        characteristic = gatt.getService(ADD_H_SERVICE)
-                                .getCharacteristic(ADD_H_DATA_CHAR);
+                    characteristic = gatt.getService(ADD_H_SERVICE_RESPONSE_UUID)
+                            .getCharacteristic(ADD_H_CHARACTER_RESPONCE_UUID);
+                    break;
+                case 1:
+                    Log.d(TAG, "Set notify HAHCILD call");
 
+                    characteristic = gatt.getService(ADD_H_SERVICE_REQUEST_UUID)
+                            .getCharacteristic(ADD_H_CHARACTER_REQUEST_UUID);
                     break;
 
                 default:
@@ -299,92 +288,94 @@ public class MainActivity extends AppCompatActivity  implements BluetoothAdapter
             //Enable local notifications
             gatt.setCharacteristicNotification(characteristic, true);
             //Enable remote notifications
-            BluetoothGattDescriptor desc = characteristic.getDescriptor(ADD_H_DESCRIPTOR);
+            BluetoothGattDescriptor desc = characteristic.getDescriptor(ADD_H_DESCRIPTOR_UUID);
             desc.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
             gatt.writeDescriptor(desc);
         }
 
-
-        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState){
-            Log.d(TAG, "Connection State Change: " + status +"->"+ connectionState(newState));
-            if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_CONNECTED){
+        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+            Log.d(TAG, "Connection State Change: " + status + "->" + connectionState(newState));
+            if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_CONNECTED) {
                 /*
-                *Once successfully connected, we must next discover all the services on the
-                *device before we can read and write their characteristics
-                */
+                 *Once successfully connected, we must next discover all the services on the
+                 *device before we can read and write their characteristics
+                 */
                 gatt.discoverServices();
                 mHandler.sendMessage(Message.obtain(null, MSG_PROGRESS, "Discovering service"));
-            } else if ( status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_DISCONNECTED) {
+            } else if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_DISCONNECTED) {
                 /*
                 If at any point we disconnect, send a message to clear the weather values
                 * out of the UI
                 */
                 mHandler.sendEmptyMessage(MSG_CLEAR);
-            } else if (status != BluetoothGatt.GATT_SUCCESS){
+            } else if (status != BluetoothGatt.GATT_SUCCESS) {
                 /*
-                *if there is a failure at any stage, simply disconnect
-                */
+                 *if there is a failure at any stage, simply disconnect
+                 */
                 gatt.disconnect();
-
-
             }
         }
 
-
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            Log.d(TAG, "Service discovered: "+status);
+            Log.d(TAG, "Service discovered: " + status);
             mHandler.sendMessage(Message.obtain(null, MSG_PROGRESS, "Enabling Sensors ... "));
-           /*
-           * With services discovered, we are going to reset out state machine and start
-           *working through the sensors we need to enable
-           */
-           reset();
+            /*
+             * With services discovered, we are going to reset out state machine and start
+             *working through the sensors we need to enable
+             */
+            reset();
             enableNextSensor(gatt);
 
         }
 
-        public void onCharacteristicRead (BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status){
+        public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             // For each read, pass the data up to the UI thread to update the display
 
-            if (ADD_H_DATA_CHAR.equals(characteristic.getUuid())){
+            if (ADD_H_CHARACTER_RESPONCE_UUID.equals(characteristic.getUuid())) {
                 mHandler.sendMessage(Message.obtain(null, MSG_CHAR, characteristic));
             }
             //After reading the initial value, next we enable notifications
+            if (ADD_H_CHARACTER_REQUEST_UUID.equals(characteristic.getUuid())) {
+                mHandler.sendMessage(Message.obtain(null, MSG_REQ, characteristic));
+            }
+            //After reading the initial value, next we enable notifications
 
-            for (int i = 0; i < 100; i++){
-            setNotifyNextSensor(gatt);}
+            setNotifyNextSensor(gatt);
         }
 
 
-
-        public  void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-           //After writing the enable flag, next we read the initial value
+        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            //After writing the enable flag, next we read the initial value
 
             readNextSensor(gatt);
-            }
+        }
 
 
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             /*
-            * After notification are enabled, all updates from device on characteristic
-            * value changes will be posted here. Similar to read, we hand these up to the
-            * UI thread to update the display.
-            */
+             * After notification are enabled, all updates from device on characteristic
+             * value changes will be posted here. Similar to read, we hand these up to the
+             * UI thread to update the display.
+             */
 
-            if (ADD_H_DATA_CHAR.equals(characteristic.getUuid())){
+            if (ADD_H_CHARACTER_RESPONCE_UUID.equals(characteristic.getUuid())) {
                 mHandler.sendMessage(Message.obtain(null, MSG_CHAR, characteristic));
             }
+            if (ADD_H_CHARACTER_REQUEST_UUID.equals(characteristic.getUuid())) {
+                mHandler.sendMessage(Message.obtain(null, MSG_REQ, characteristic));
+            }
+
         }
 
-        public void  onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status){
+        public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
             //Once notifications are enabled, we move to the next sensor and start over with enable
             advance();
             enableNextSensor(gatt);
         }
 
-        public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status){
-            Log.d(TAG, "Remote RSSI: "+rssi);
+        public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
+            Log.d(TAG, "Remote RSSI: " + rssi);
         }
 
         private String connectionState(int status) {
@@ -401,73 +392,97 @@ public class MainActivity extends AppCompatActivity  implements BluetoothAdapter
                     return String.valueOf(status);
             }
         }
+
     };
+    /*
+     * We have a Handler to process event results on the main thread
+     */
+    private static final int MSG_CHAR = 102;
+    private static final int MSG_REQ = 103;
+    private static final int MSG_PROGRESS = 201;
+    private static final int MSG_DISMISS = 202;
+    private static final int MSG_CLEAR = 301;
+    @SuppressLint("HandlerLeak")
+    private Handler mHandler = new Handler() {
+        public void handleMessage(Message msg) {
+            BluetoothGattCharacteristic characteristic;
+            switch (msg.what) {
+                case MSG_CHAR:
+                    characteristic = (BluetoothGattCharacteristic) msg.obj;
+                    if (characteristic.getValue() == null) {
+                        Log.d(TAG, "Error obtaining HACHILD_read value");
+                        return;
+                    }
+                    updateHACHILD_Read_Values(characteristic);
+                    break;
+                case MSG_REQ:
+                    characteristic = (BluetoothGattCharacteristic) msg.obj;
+                    if (characteristic.getValue() == null) {
+                        Log.d(TAG, "Error obtaining HACHILD_read value");
+                        return;
+                    }
+                    updateHACHILD_Read_Values(characteristic);
+                    break;
 
-
-        /*
-        * We have a Handler to process event results on the main thread
-        */
-        private static final int MSG_CHAR = 102;
-        private static final int MSG_CHAR_CONFIG = 103;
-        private static final int MSG_PROGRESS = 201;
-        private static final int MSG_DISMISS = 202;
-        private static final int MSG_CLEAR = 301;
-        @SuppressLint("HandlerLeak")
-        private Handler mHandler = new Handler(){
-            public void handleMessage(Message msg) {
-                BluetoothGattCharacteristic characteristic;
-                switch (msg.what){
-                  case MSG_CHAR:
-                      characteristic = (BluetoothGattCharacteristic) msg.obj;
-                      if(characteristic.getValue() == null) {
-                          Log.d(TAG, "Error obtaining HACHILD_read value");
-                          return;
-                      }
-                      updateHACHILD_Read_Values(characteristic);
-                      break;
-
-                  case MSG_PROGRESS:
-
+                case MSG_PROGRESS:
                       /*mProgress.setMessage((""), msg.obj);
                       if (!mProgress.isShowing()) {
                           mProgress.show();
                       }*/
-
-                      break;
-                  case MSG_DISMISS:
-                      //mProgress.hide();
-                      break;
-                  case  MSG_CLEAR:
-                      clearDisplayValues();
-                      break;
-              }
+                    break;
+                case MSG_DISMISS:
+                    //mProgress.hide();
+                    break;
+                case MSG_CLEAR:
+                    clearDisplayValues();
+                    break;
             }
-        };
-
-        /*Method to extract sensor data and update the UI*/
-
-        private  byte [] masR;
-        private int x=0;
-        private int y=0;
-        private int z=0;
-
-        private void updateHACHILD_Read_Values(BluetoothGattCharacteristic characteristic) {
-            masR = SensorTagData.extractHachild(characteristic);
-
-            x = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 3);
-            y = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 4);
-            z = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 5);
-
-            mChild.setText(String.valueOf(x)+":"+String.valueOf(y)+":"+String.valueOf(z));
-           Log.d(TAG," coordinate x = " + x + " coordinate y = "+ y +" coordinate z = "+z);
-
         }
+    };
+
+    /*Method to extract sensor data and update the UI*/
+    private byte[] masR;
+    private int x = 0;
+    private int y = 0;
+    private int z = 0;
+    int i = 0;
+
+    private void updateHACHILD_Read_Values(BluetoothGattCharacteristic characteristic) {
+        masR = SensorTagData.extractHachild(characteristic);
+        i++;
+        Log.d(TAG, "/////////////" + i + " координаты ////////////////////////////////////////////////////");
+        Log.d(TAG,
+                "coordinate x = " +
+                        characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 3) + "+" +
+                        characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 4) + "+" +
+                        characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 5) + "+" +
+                        characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 6));
+
+        Log.d(TAG,
+                "coordinate y = " +
+                        characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 6) + "+" +
+                        characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 7) + "+" +
+                        characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 8) + "+" +
+                        characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 9));
+
+        Log.d(TAG,
+                "coordinate z = " +
+                        characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 9) + "+" +
+                        characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 10) + "+" +
+                        characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 11) + "+" +
+                        characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 12));
 
 
-        private void LOGclass(String where, String text) {
-            Log.d(TAG, " немного текста " +where+ text);
-        }
+
+        mChild.setText(String.valueOf(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 3)) +
+                ":" + String.valueOf(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 6)) +
+                ":" + String.valueOf(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 9)));
 
 
+    }
+
+    private void LOGclass(String where, String text) {
+        Log.d(TAG, " немного текста " + where + text);
+    }
 
 }
