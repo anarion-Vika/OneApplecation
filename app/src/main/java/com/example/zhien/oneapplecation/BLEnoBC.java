@@ -235,7 +235,7 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
             float averageCoordinate = Float.parseFloat(String.valueOf(ZAxis.get(i)));
             ZAxisAverageSecond.add(new Entry(averageCoordinate, i));
         }
-////////////////////////
+/////////////////////////////////////////////////
         // в классе тест добавлять вручную записи, указывая полученные результат, + номер сессии
         ArrayList<ILineDataSet> lineDataSets = new ArrayList<>();
         LineDataSet lineDataSet1 = new LineDataSet(XAxisAverageSecond, "X");
