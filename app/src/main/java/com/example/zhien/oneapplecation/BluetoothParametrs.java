@@ -19,6 +19,8 @@ public interface BluetoothParametrs {
 
     //characteristic for request
     UUID ADD_H_CHARACTER_REQUEST_UUID  = UUID.fromString("340a1b80-cf4b-11e1-ac36-0002a5d5c51b");
+    UUID ADD_H_CHARACTER_REQUEST_RESPONSE_UUID  = UUID.fromString("e23e78a0-cf4a-11e1-8ffc-0002a5d5c51b");
+
 
     UUID ADD_H_DESCRIPTOR_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 }
