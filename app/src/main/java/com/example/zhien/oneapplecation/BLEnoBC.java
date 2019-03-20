@@ -15,6 +15,7 @@ import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
@@ -40,6 +41,14 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
+
 import java.util.ArrayList;
 
 import static android.content.Context.BLUETOOTH_SERVICE;
@@ -63,7 +72,9 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
     private TextView mChild;
     private Button btnDisconnect;
     private Button btnGoToGraph;
+    private Button btnShowGraph;
 
+    private LineChart lineChart;
     public static ArrayList<Double> mAccelerationVectors = new ArrayList<>();
     public static ArrayList<Double> mAccelerationVectorsSecond = new ArrayList<>();
     public static ArrayList<Double> mAccelerationVectorsMinute = new ArrayList<>();
@@ -72,6 +83,10 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
     public static ArrayList<Double> ZAxis = new ArrayList<>();
     private LinearLayout mllActivityBlenobc;
 
+    ArrayList<String> xAxis = new ArrayList<>();
+    ArrayList<Entry> XAxisAverageSecond = new ArrayList<>();
+    ArrayList<Entry> YAxisAverageSecond = new ArrayList<>();
+    ArrayList<Entry> ZAxisAverageSecond = new ArrayList<>();
 
     public static BLEnoBC newInstance() {
         Bundle args = new Bundle();
@@ -94,6 +109,8 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
         btnDisconnect.setOnClickListener(this);
         btnGoToGraph = view.findViewById(R.id.btnGoToGraph);
         btnGoToGraph.setOnClickListener(this);
+        btnShowGraph = view.findViewById(R.id.btnShowGraph);
+        btnShowGraph.setOnClickListener(this);
 
         BluetoothManager manager = (BluetoothManager) getActivity().getSystemService(BLUETOOTH_SERVICE);
         mBluetoothAdapter = manager.getAdapter();
@@ -106,11 +123,14 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
         setActionBarTitle("Acceleration");
         ((AppCompatActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         i = 0;
-        requestLocationPermissionIfNeeded();
         setRetainInstance(true);
         setHasOptionsMenu(true);
+        lineChart = view.findViewById(R.id.linearChartGraph1);
+
+
         return view;
     }
+
 
     public void setActionBarTitle(String title) {
         ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(title);
@@ -182,17 +202,71 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btnDisconnect:
-            if (mConnectedGatt != null) {
-                mConnectedGatt.close();
-                mllActivityBlenobc.setBackgroundColor(Color.WHITE);
-            }
-            break;
+                if (mConnectedGatt != null) {
+                    mConnectedGatt.close();
+                    mllActivityBlenobc.setBackgroundColor(Color.WHITE);
+                }
+                break;
             case R.id.btnGoToGraph:
                 getFragmentManager().beginTransaction().replace(R.id.fragmentContainer, new GraphFragment())
                         .addToBackStack(GraphFragment.class.getName())
                         .commit();
+                break;
+            case R.id.btnShowGraph:
+                ShowGraph();
+                break;
 
         }
+    }
+
+
+    private void ShowGraph() {
+
+        for (int i = 0; i < XAxis.size(); i++) {
+            float averageCoordinate = Float.parseFloat(String.valueOf(XAxis.get(i)));
+            XAxisAverageSecond.add(new Entry(averageCoordinate, i));
+            xAxis.add(i, String.valueOf((i)));
+        }
+        for (int i = 0; i < YAxis.size(); i++) {
+            float averageCoordinate = Float.parseFloat(String.valueOf(YAxis.get(i)));
+            YAxisAverageSecond.add(new Entry(averageCoordinate, i));
+        }
+        for (int i = 0; i < ZAxis.size(); i++) {
+            float averageCoordinate = Float.parseFloat(String.valueOf(ZAxis.get(i)));
+            ZAxisAverageSecond.add(new Entry(averageCoordinate, i));
+        }
+
+        // в классе тест добавлять вручную записи, указывая полученные результат, + номер сессии
+        ArrayList<ILineDataSet> lineDataSets = new ArrayList<>();
+        LineDataSet lineDataSet1 = new LineDataSet(XAxisAverageSecond, "X");
+        lineDataSet1.setDrawCircles(false);
+        lineDataSet1.setColor(Color.RED);
+        lineDataSet1.setDrawValues(false);
+        lineDataSets.add(lineDataSet1);
+        LineDataSet lineDataSet2 = new LineDataSet(YAxisAverageSecond, "Y");
+        lineDataSet2.setDrawCircles(false);
+        lineDataSet2.setColor(Color.BLUE);
+        lineDataSet2.setDrawValues(false);
+        lineDataSets.add(lineDataSet2);
+        LineDataSet lineDataSet3 = new LineDataSet(ZAxisAverageSecond, "Z");
+        lineDataSet3.setDrawCircles(false);
+        lineDataSet3.setColor(Color.BLACK);
+        lineDataSet3.setDrawValues(false);
+        lineDataSets.add(lineDataSet3);
+        com.github.mikephil.charting.components.XAxis xl = lineChart.getXAxis();
+        //  xl.setDrawLabels(false);
+        com.github.mikephil.charting.components.YAxis yl = lineChart.getAxisLeft();
+        yl.setDrawLabels(false);
+        YAxis y2 = lineChart.getAxisRight();
+        y2.setShowOnlyMinMax(true);
+        y2.setDrawLabels(false);
+        lineDataSet1.setDrawCubic(true);
+        lineDataSet2.setDrawCubic(true);
+        lineDataSet3.setDrawCubic(true);
+        lineChart.setData(new LineData(xAxis, lineDataSets));
+        lineChart.setVisibleXRangeMaximum(600);
+        lineChart.setVisibleXRangeMinimum(10);
+        lineChart.setScaleYEnabled(false);
     }
 
 

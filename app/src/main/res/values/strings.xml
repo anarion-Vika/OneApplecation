@@ -3,4 +3,5 @@
     <string name="btn_disconect">Disconnect</string>
     <string name="disconnect_from_device">Disconnect form device</string>
     <string name="go_to_chart">Go to chart</string>
+    <string name="show_chart">show chart</string>
 </resources>

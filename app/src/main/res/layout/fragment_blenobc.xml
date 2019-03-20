@@ -1,43 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/llActivityBlenobc"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/llActivityBlenobc"
     android:orientation="vertical">
 
 
     <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:id="@+id/toolbar"
         android:background="@color/colorPrimaryDark"
-        app:theme ="@style/ThemeOverlay.AppCompat.ActionBar">
+        app:theme="@style/ThemeOverlay.AppCompat.ActionBar">
 
     </android.support.v7.widget.Toolbar>
 
     <TextView
+        android:id="@+id/tvChild"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/tvChild"
+        android:layout_marginBottom="20dp"
         android:hint="some data"
-        android:textSize="20dp"
-        android:layout_marginBottom="20dp"/>
+        android:textSize="20dp" />
 
     <Button
         android:id="@+id/btnDisconnect"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/disconnect_from_device"/>
+        android:text="@string/disconnect_from_device" />
 
     <Button
         android:id="@+id/btnGoToGraph"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/go_to_chart"/>
+        android:text="@string/go_to_chart" />
 
+    <Button
+        android:id="@+id/btnShowGraph"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/show_chart" />
 
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/linearChartGraph1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
 
 </LinearLayout>
