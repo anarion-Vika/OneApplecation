@@ -16,6 +16,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -23,6 +24,9 @@ import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
@@ -32,8 +36,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.ArrayList;
 
 import static android.content.Context.BLUETOOTH_SERVICE;
 import static com.example.zhien.oneapplecation.BluetoothParametrs.ADD_H_CHARACTER_REQUEST_UUID;
@@ -52,11 +59,18 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
 
     private BluetoothAdapter mBluetoothAdapter;
     private SparseArray<BluetoothDevice> mDevice;
-
     private BluetoothGatt mConnectedGatt;
-
     private TextView mChild;
     private Button btnDisconnect;
+    private Button btnGoToGraph;
+
+    public static ArrayList<Double> mAccelerationVectors = new ArrayList<>();
+    public static ArrayList<Double> mAccelerationVectorsSecond = new ArrayList<>();
+    public static ArrayList<Double> mAccelerationVectorsMinute = new ArrayList<>();
+    public static ArrayList<Double> XAxis = new ArrayList<>();
+    public static ArrayList<Double> YAxis = new ArrayList<>();
+    public static ArrayList<Double> ZAxis = new ArrayList<>();
+    private LinearLayout mllActivityBlenobc;
 
 
     public static BLEnoBC newInstance() {
@@ -78,17 +92,29 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
         mChild = view.findViewById(R.id.tvChild);
         btnDisconnect = view.findViewById(R.id.btnDisconnect);
         btnDisconnect.setOnClickListener(this);
+        btnGoToGraph = view.findViewById(R.id.btnGoToGraph);
+        btnGoToGraph.setOnClickListener(this);
 
         BluetoothManager manager = (BluetoothManager) getActivity().getSystemService(BLUETOOTH_SERVICE);
         mBluetoothAdapter = manager.getAdapter();
         requestLocationPermissionIfNeeded();
         mDevice = new SparseArray<BluetoothDevice>();
+        mllActivityBlenobc = view.findViewById(R.id.llActivityBlenobc);
+
+        Toolbar toolbar = view.findViewById(R.id.toolbar);
+        ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
+        setActionBarTitle("Acceleration");
+        ((AppCompatActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         i = 0;
+        requestLocationPermissionIfNeeded();
         setRetainInstance(true);
         setHasOptionsMenu(true);
         return view;
     }
 
+    public void setActionBarTitle(String title) {
+        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(title);
+    }
 
     // region Permissions
     @TargetApi(Build.VERSION_CODES.M)
@@ -154,8 +180,18 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
 
     @Override
     public void onClick(View view) {
-        if (mConnectedGatt != null) {
-            mConnectedGatt.close();
+        switch (view.getId()) {
+            case R.id.btnDisconnect:
+            if (mConnectedGatt != null) {
+                mConnectedGatt.close();
+                mllActivityBlenobc.setBackgroundColor(Color.WHITE);
+            }
+            break;
+            case R.id.btnGoToGraph:
+                getFragmentManager().beginTransaction().replace(R.id.fragmentContainer, new GraphFragment())
+                        .addToBackStack(GraphFragment.class.getName())
+                        .commit();
+
         }
     }
 
@@ -179,10 +215,17 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
 
     }
 
+    public void onBackPressed() {
+        FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.popBackStack();
+    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
             case R.id.action_scan:
                 mDevice.clear();
                 startScan();
@@ -261,14 +304,14 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
 
                     characteristic = gatt.getService(ADD_H_SERVICE_REQUEST_UUID)
                             .getCharacteristic(ADD_H_CHARACTER_REQUEST_UUID);
-                    characteristic.setValue(new byte[]{0x01, 0x02, 0x01, (byte) 0xFE});
+                    characteristic.setValue((new byte[]{0x01, 0x03, 0x01, 0x01, (byte) 0xFE}));
                     break;
 
                 case 1:
                     Log.d(TAG, "Enabling child call ");
                     characteristic = gatt.getService(ADD_H_SERVICE_RESPONSE_UUID)
                             .getCharacteristic(ADD_H_CHARACTER_RESPONCE_UUID);
-                    characteristic.setValue(new byte[]{0x01, 0x02, 0x01, (byte) 0xFE});
+                    characteristic.setValue((new byte[]{0x01, 0x03, 0x01, 0x01, (byte) 0xFE}));
                     break;
 
                 default:
@@ -465,13 +508,8 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
                     break;
 
                 case MSG_PROGRESS:
-                      /*mProgress.setMessage((""), msg.obj);
-                      if (!mProgress.isShowing()) {
-                          mProgress.show();
-                      }*/
                     break;
                 case MSG_DISMISS:
-                    //mProgress.hide();
                     break;
                 case MSG_CLEAR:
                     clearDisplayValues();
@@ -481,37 +519,93 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
     };
 
     /*Method to extract sensor data and update the UI*/
-    private byte[] masR;
+    private double x_filter = 0;
+    private double y_filter = 0;
+    private double z_filter = 0;
+
     private int x = 0;
     private int y = 0;
     private int z = 0;
+
+    private double vectorAcceleration = 0;
+    int xor = 0xFF;
     int i = 0;
+    final float gConst = (float) 0.018;
 
     private void updateHACHILD_Read_Values(BluetoothGattCharacteristic characteristic) {
+        if (i != 0) {
+            Log.d(TAG, "/////////////" + i + " координаты ////////////////////////////////////////////////////");
+            Log.d(TAG, "---------------------------------------------------------------------");
+            Log.d(TAG, "hexToString =                  " + Utils.hexToString(characteristic.getValue()));
+            x = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 3);
+            y = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 4);
+            z = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 5);
+            if (x > 126) {
+                x = x - 1;
+                x = x ^ xor;
+            }
+            if (y > 126) {
+                y = y - 1;
+                y = y ^ xor;
+            }
+            if (z > 126) {
+                z = z - 1;
+                z = z ^ xor;
+            }
+            Log.d(TAG, "========================================================-");
+            Log.d(TAG, "и координаты = " + x + "  " + y + "  " + z);
+
+// transef to milg (9.8)
+            x_filter = x * gConst;
+            y_filter = y * gConst;
+            z_filter = z * gConst;
+
+            XAxis.add(x_filter);
+            YAxis.add(y_filter);
+            ZAxis.add(z_filter);
+
+            vectorAcceleration = Math.sqrt(x_filter * x_filter + y_filter * y_filter + z_filter * z_filter);
+            Log.d(TAG, "x*x = " + x_filter * x_filter + " y*y  = " + y_filter * y_filter + " z*z = " + z_filter * z_filter);
+            mAccelerationVectors.add(vectorAcceleration);
+            onDataForGraphsInSecond(vectorAcceleration);
+            Log.d(TAG, " вектор ускорения = " + vectorAcceleration);
+            mChild.setText(String.valueOf(vectorAcceleration));
+            Log.d(TAG, "---------------------------------------------------------------------");
+        }
         i++;
-        Log.d(TAG, "/////////////" + i + " координаты ////////////////////////////////////////////////////");
-        Log.d(TAG,
-                "coordinate x = " +
-                        characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 3));
-
-        Log.d(TAG,
-                "coordinate y = " +
-                        characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 4));
-
-        Log.d(TAG,
-                "coordinate z = " +
-                        characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 5));
-
-
-        mChild.setText(String.valueOf(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 3)) +
-                ":" + String.valueOf(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 4)) +
-                ":" + String.valueOf(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 5)));
-
-
     }
 
-    private void LOGclass(String where, String text) {
-        Log.d(TAG, " немного текста " + where + text);
+    int enteringSecond = 0;
+    double vectorAccelerationMiddleSecond = 0;
+
+    public void onDataForGraphsInSecond(double vectorAcceleration) {
+        enteringSecond++;
+        if (enteringSecond % 10 != 0) {
+            vectorAccelerationMiddleSecond = vectorAccelerationMiddleSecond + vectorAcceleration;
+        } else {
+            vectorAccelerationMiddleSecond = vectorAccelerationMiddleSecond / 10;
+            mAccelerationVectorsSecond.add(vectorAccelerationMiddleSecond);
+            onDataForGraphsInMinute(vectorAccelerationMiddleSecond);
+            Log.d(TAG, " среднее значение в секунду " + vectorAccelerationMiddleSecond);
+            vectorAccelerationMiddleSecond = 0;
+            enteringSecond = 0;
+        }
+    }
+
+    int enteringMinute = 0;
+    double vectorAccelerationMiddleMinute = 0;
+
+    public void onDataForGraphsInMinute(double vectorAccelerationMidleSecond) {
+        enteringMinute++;
+        if (enteringMinute % 60 != 0) {
+            vectorAccelerationMiddleMinute = vectorAccelerationMiddleMinute + vectorAccelerationMidleSecond;
+        } else {
+            vectorAccelerationMiddleMinute = vectorAccelerationMiddleMinute / 60;
+            mAccelerationVectorsMinute.add(vectorAccelerationMiddleMinute);
+            Log.d(TAG, " среднее значение в минуту " + vectorAccelerationMiddleMinute);
+            vectorAccelerationMiddleMinute = 0;
+            enteringMinute = 0;
+        }
     }
 
 }
