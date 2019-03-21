@@ -77,7 +77,7 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
     private boolean plotData = true;
 
     private LineChart lineChart;
-    public static ArrayList<Double> mAccelerationVectors = new ArrayList<>();
+    public static ArrayList<Float> mAccelerationVectors = new ArrayList<>();
     public static ArrayList<Double> mAccelerationVectorsSecond = new ArrayList<>();
     public static ArrayList<Double> mAccelerationVectorsMinute = new ArrayList<>();
     public static ArrayList<Double> XAxis = new ArrayList<>();
@@ -137,7 +137,7 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
     }
 
 
-    private void addEntry(int x) {
+    private void addEntry(float vector) {
 
         LineData data = lineChart.getData();
 
@@ -148,11 +148,11 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
                 data.addDataSet(set);
             }
 
-            data.addEntry(new Entry(set.getEntryCount(), (x+5) ), 0);
+            data.addEntry(new Entry(set.getEntryCount(), vector ), 0);
             data.notifyDataChanged();
             lineChart.notifyDataSetChanged();
             lineChart.setVisibleXRangeMaximum(60);
-           // lineChart.moveViewToX(data.getEntryCount());
+            lineChart.moveViewToX(data.getEntryCount());
 
         }
     }
@@ -222,7 +222,7 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
                     //     mConnectedGatt.close();
                     mConnectedGatt.disconnect();
                     mConnectedGatt = null;
-                    mllActivityBlenobc.setBackgroundColor(Color.WHITE);
+
                 }
                 break;
             case R.id.btnGoToGraph:
@@ -657,13 +657,13 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
     private int y = 0;
     private int z = 0;
 
-    private double vectorAcceleration = 0;
+    private float vectorAcceleration = 0;
     int xor = 0xFF;
     int i = 0;
     final float gConst = (float) 0.018;
 
     private void updateHACHILD_Read_Values(BluetoothGattCharacteristic characteristic) {
-        if (i != 0) {
+        if (i > 10) {
             Log.d(TAG, "/////////////" + i + " координаты ////////////////////////////////////////////////////");
             Log.d(TAG, "---------------------------------------------------------------------");
             Log.d(TAG, "hexToString =                  " + Utils.hexToString(characteristic.getValue()));
@@ -694,7 +694,7 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
             YAxis.add(y_filter);
             ZAxis.add(z_filter);
 
-            vectorAcceleration = Math.sqrt(x_filter * x_filter + y_filter * y_filter + z_filter * z_filter);
+            vectorAcceleration = (float) Math.sqrt(x_filter * x_filter + y_filter * y_filter + z_filter * z_filter);
             Log.d(TAG, "x*x = " + x_filter * x_filter + " y*y  = " + y_filter * y_filter + " z*z = " + z_filter * z_filter);
             mAccelerationVectors.add(vectorAcceleration);
             onDataForGraphsInSecond(vectorAcceleration);
@@ -702,7 +702,11 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
             mChild.setText(String.valueOf(vectorAcceleration));
             Log.d(TAG, "---------------------------------------------------------------------");
 
-                addEntry(i  );
+            if (plotData) {
+                addEntry(vectorAcceleration);
+                plotData = false;
+            }
+
         }
         i++;
     }

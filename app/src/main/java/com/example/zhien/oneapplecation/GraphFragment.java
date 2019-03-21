@@ -84,12 +84,12 @@ public class GraphFragment extends Fragment {
         YAxis yl = lineChart.getAxisLeft();
         yl.setDrawLabels(false);
         YAxis y2 = lineChart.getAxisRight();
-        y2.setShowOnlyMinMax(true);
+     //   y2.setShowOnlyMinMax(true);
         y2.setDrawLabels(false);
-        lineDataSet1.setDrawCubic(true);
-        lineDataSet2.setDrawCubic(true);
-        lineDataSet3.setDrawCubic(true);
-        lineChart.setData(new LineData(xAxis, lineDataSets));
+      //  lineDataSet1.setDrawCubic(true);
+     //   lineDataSet2.setDrawCubic(true);
+      //  lineDataSet3.setDrawCubic(true);
+       // lineChart.setData(new LineData(xAxis, lineDataSets));
         lineChart.setVisibleXRangeMaximum(600);
         lineChart.setVisibleXRangeMinimum(10);
         lineChart.setScaleYEnabled(false);
