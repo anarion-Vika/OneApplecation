@@ -26,15 +26,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginRight="25dp"
+            android:layout_marginRight="10dp"
             android:layout_marginLeft="5dp">
 
             <TextView
                 android:id="@+id/tvDataNow"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="10dp"
-                android:layout_marginBottom="10dp"
+
                 android:hint="текущее знач."
                 android:textSize="20dp" />
 
@@ -51,14 +50,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginRight="25dp">
+            android:layout_marginRight="10dp">
 
             <TextView
                 android:id="@+id/tvMax"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="10dp"
-                android:layout_marginBottom="10dp"
                 android:hint="макс. за мин"
                 android:textSize="20dp" />
 
@@ -75,14 +72,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginRight="25dp">
+            android:layout_marginRight="10dp">
 
             <TextView
                 android:id="@+id/tvAverage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="10dp"
-                android:layout_marginBottom="10dp"
+
                 android:hint="Среднее за мин"
                 android:textSize="20dp" />
 
@@ -98,15 +94,12 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginRight="25dp">
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/tvDisperion"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-
-                android:layout_marginBottom="10dp"
                 android:hint="Дисперсия"
                 android:textSize="20dp" />
 
