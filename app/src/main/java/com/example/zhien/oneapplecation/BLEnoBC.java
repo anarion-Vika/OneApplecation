@@ -689,7 +689,7 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
         }
         mMaxValue.setText(format(max));
     }
-
+//////
     private void onCalculateAverage(ArrayList<Float> vectorList) {
         double summary = 0;
         double average = 0;
