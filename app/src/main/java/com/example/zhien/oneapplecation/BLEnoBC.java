@@ -577,8 +577,8 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
     private void updateHACHILD_Read_Values(BluetoothGattCharacteristic characteristic) {
         if (i > 10) {
             Log.d(TAG, "/////////////" + i + " координаты ////////////////////////////////////////////////////");
-            Log.d(TAG, "---------------------------------------------------------------------");
-            Log.d(TAG, "hexToString =                  " + Utils.hexToString(characteristic.getValue()));
+          //  Log.d(TAG, "---------------------------------------------------------------------");
+           // Log.d(TAG, "hexToString =                  " + Utils.hexToString(characteristic.getValue()));
             x = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 3);
             y = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 4);
             z = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 5);
@@ -594,8 +594,8 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
                 z = z - 1;
                 z = z ^ xor;
             }
-            Log.d(TAG, "========================================================-");
-            Log.d(TAG, "и координаты = " + x + "  " + y + "  " + z);
+            //Log.d(TAG, "========================================================-");
+           // Log.d(TAG, "и координаты = " + x + "  " + y + "  " + z);
 
 // transef to milg (9.8)
             x_filter = x * gConst;
@@ -607,12 +607,12 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
             ZAxis.add(z_filter);
             if ((x_filter * x_filter != 3.2399997210502685E-4) && (y_filter * y_filter != 3.2399997210502685E-4) && (z_filter * z_filter != 3.2399997210502685E-4)) {
                 vectorAcceleration = (float) Math.sqrt(x_filter * x_filter + y_filter * y_filter + z_filter * z_filter);
-                Log.d(TAG, "x*x = " + x_filter * x_filter + " y*y  = " + y_filter * y_filter + " z*z = " + z_filter * z_filter);
+              //  Log.d(TAG, "x*x = " + x_filter * x_filter + " y*y  = " + y_filter * y_filter + " z*z = " + z_filter * z_filter);
                 mAccelerationVectors.add(vectorAcceleration);
                 onEnteringCounter(vectorAcceleration);
-                onDataForGraphsInSecond(vectorAcceleration);
+          //      onDataForGraphsInSecond(vectorAcceleration);
                 Log.d(TAG, " вектор ускорения = " + vectorAcceleration);
-                mDataNowValue.setText(String.valueOf(vectorAcceleration));
+                mDataNowValue.setText(format(vectorAcceleration));
                 Log.d(TAG, "---------------------------------------------------------------------");
 
                 if (plotData) {
@@ -635,7 +635,7 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
             vectorAccelerationMiddleSecond = vectorAccelerationMiddleSecond / 10;
             mAccelerationVectorsSecond.add(vectorAccelerationMiddleSecond);
             onDataForGraphsInMinute(vectorAccelerationMiddleSecond);
-            Log.d(TAG, " среднее значение в секунду " + vectorAccelerationMiddleSecond);
+          //  Log.d(TAG, " среднее значение в секунду " + vectorAccelerationMiddleSecond);
             vectorAccelerationMiddleSecond = 0;
             enteringSecond = 0;
         }
@@ -651,22 +651,22 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
         } else {
             vectorAccelerationMiddleMinute = vectorAccelerationMiddleMinute / 60;
             mAccelerationVectorsMinute.add(vectorAccelerationMiddleMinute);
-            Log.d(TAG, " среднее значение в минуту " + vectorAccelerationMiddleMinute);
+          //  Log.d(TAG, " среднее значение в минуту " + vectorAccelerationMiddleMinute);
             vectorAccelerationMiddleMinute = 0;
             enteringMinute = 0;
         }
     }
 
     private int enteringCounter = 0;
-
     // %600 = 10(times)*60(sec)
+    private ArrayList<Float> vectorList = new ArrayList<>();
     private void onEnteringCounter(float vector) {
-        ArrayList<Float> vectorList = new ArrayList<>();
         vectorList.add(vector);
         enteringCounter++;
-        if (enteringCounter % 600 == 0) {
+        if (enteringCounter % 100 == 0) {
             onCalculateAverage(vectorList);
             onCalculateMax(vectorList);
+            onCalculateDispersion(vectorList);
             vectorList.clear();
             enteringCounter = 0;
         }
@@ -679,7 +679,7 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
                 max = vectorList.get(i);
             }
         }
-        mMaxValue.setText(String.valueOf(max));
+        mMaxValue.setText(format(max));
     }
 
     private double onCalculateAverage(ArrayList<Float> vectorList) {
@@ -689,22 +689,28 @@ public class BLEnoBC extends Fragment implements BluetoothAdapter.LeScanCallback
             summary = summary + vectorList.get(i);
         }
         average = summary / vectorList.size();
-        onCalculateDispersion(average, vectorList);
-        mAverageValue.setText(String.valueOf(average));
+        mAverageValue.setText(format(average));
         Log.d(TAG, " average = " + average);
+        Log.d(TAG, " summary = " + summary);
         return average;
     }
 
-    private void onCalculateDispersion(double averageValue, ArrayList<Float> vectorList) {
+    private void onCalculateDispersion(ArrayList<Float> vectorList) {
+        double averageValue = 0;
         float deviationSquare = 0;
         double dispersion = 0;
+        averageValue = onCalculateAverage(vectorList);
         ArrayList<Float> vectorListDeviationSquare = new ArrayList<>();
         for (int i = 0; i < vectorList.size(); i++) {
             deviationSquare = (float) Math.pow((vectorList.get(i) - averageValue), 2);
             vectorListDeviationSquare.add(deviationSquare);
         }
         dispersion = Math.sqrt(onCalculateAverage(vectorListDeviationSquare));
-        mDispersionValue.setText(String.valueOf(dispersion));
+        mDispersionValue.setText(format(dispersion));
+    }
+
+    String format(double values) {
+        return String.format("%1$.4f\t", values);
     }
 
 }
